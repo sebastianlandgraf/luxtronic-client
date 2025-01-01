@@ -1,6 +1,12 @@
 import { aFieldsErrorCodeDescription, getErrorDescription } from './error.js';
 import { aFieldsHeatPumpType, getHeatPumpType } from './hptype.js';
-import { parseFloat } from './parsers.js';
+import {
+  parseBool,
+  parseDate,
+  parseFloat,
+  parseIp,
+  parseRange,
+} from './parsers.js';
 import {
   aFieldsBetriebsZustand,
   aFieldsBilanzStufe,
@@ -25,15 +31,6 @@ export function range(start: number, end: number, step: number): number[] {
     ret.push(i);
   }
   return ret;
-}
-
-function int2ip(addr: number): string {
-  return [
-    (addr >> 24) & 0xff,
-    (addr >> 16) & 0xff,
-    (addr >> 8) & 0xff,
-    addr & 0xff,
-  ].join('.');
 }
 
 export const rRangeFloatData = [
@@ -78,29 +75,13 @@ export function parseRough(aData: Readonly<number[]>) {
     const valName = getValueDefByIndex(iIndex);
     let sDetails = '';
     let type: dataTypes | undefined = undefined;
+    const oValue = Number(aData[iIndex]);
+
     if (rRangeDateDiffData.includes(iIndex)) {
       type = 'range';
-      //const oValue = new Date(aData[iIndex] * 1000);
-
-      // Total number of seconds in the difference
-      const totalSeconds = aData[iIndex];
-
-      // Total number of minutes in the difference
-      const totalMinutes = Math.floor(totalSeconds / 60);
-
-      // Total number of hours in the difference
-      const totalHours = Math.floor(totalMinutes / 60);
-
-      // Getting the number of seconds left in one minute
-      const remSeconds = totalSeconds % 60;
-
-      // Getting the number of minutes left in one hour
-      const remMinutes = totalMinutes % 60;
-
-      sDetails = `${totalHours}:${remMinutes}:${remSeconds}`;
+      sDetails = parseRange(aData, iIndex);
     } else if (rRangeIntData.includes(iIndex)) {
       type = 'int';
-      const oValue = Number(aData[iIndex]);
       sDetails = oValue.toString();
       // # Any detailed information
       if (aFieldsHeatPumpType.includes(iIndex))
@@ -123,22 +104,20 @@ export function parseRough(aData: Readonly<number[]>) {
         sDetails = getErrorDescription(oValue);
     } else if (rRangeIPAddressData.includes(iIndex)) {
       type = 'ip';
-      const oValue = aData[iIndex] & 0xffffffff;
-      sDetails = int2ip(oValue);
+      sDetails = parseIp(aData, iIndex);
     } else if (rRangeDateAbsolute.includes(iIndex)) {
-      type = 'range';
-      const oValue = aData[iIndex];
-      sDetails = new Date(oValue * 1000).toUTCString();
+      type = 'date';
+      sDetails = parseDate(oValue).toUTCString();
     } else if (rRangeBoolData.includes(iIndex)) {
       type = 'bool';
-      const oValue = Number(aData[iIndex]);
-      sDetails = oValue > 0 ? 'True' : 'False';
+      sDetails = parseBool(aData, iIndex);
     } else if (rRangeFloatData.includes(iIndex)) {
       type = 'float';
-      sDetails = parseFloat(aData, iIndex);
+      sDetails = parseFloat(oValue).toString();
     }
 
     console.log(
+      iIndex,
       valName.ValueName,
       '(',
       valName.Description,

@@ -1,4 +1,4 @@
-import { parseFloat } from './parsers';
+import { parseFloat } from './parsers.js';
 
 export type dataTypes = 'range' | 'int' | 'ip' | 'date' | 'bool' | 'float';
 
@@ -7,8 +7,9 @@ export type ValueDescription = {
   ValueName: string;
   Description: string | null;
   type?: dataTypes;
-  parser?: (aData: readonly number[], iIndex: number) => string;
+  parser?: (aData: number) => number | string | Date;
   value?: string;
+  rawValue?: number;
 };
 
 const aValueDefinition: ValueDescription[] = [
@@ -1083,8 +1084,9 @@ export function getValueDefByIndex(iIndex: number): ValueDescription {
 
 export function parse(data: readonly number[]) {
   aValueDefinition.forEach((valueDef) => {
+    valueDef.rawValue = data[valueDef.index];
     if (valueDef.parser) {
-      valueDef.value = valueDef.parser(data, valueDef.index);
+      valueDef.value = valueDef.parser(valueDef.rawValue).toString();
     }
 
     console.log(valueDef);

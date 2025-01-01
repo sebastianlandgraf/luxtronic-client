@@ -1,4 +1,8 @@
-export const aFieldsErrorCodeDescription = [100, 101, 102, 103, 104];
+import { range } from './rough.js';
+import { parseDate } from './parsers.js';
+
+export const aFieldsErrorCodeDescription = range(100, 104, 1);
+export const aFieldsErrorDate = range(95, 99, 1);
 export const errorCodes = {
   701: 'Niederdruckstörung Bitte Inst. rufen;Niederdruckpressostat im Kältekreis hat mehrmals angesprochen (LW) oder länger als 20 Sekunden (SW). WP auf Leckage, Schaltpunkt Pressostat, Abtauung und TA-min überprüfen.',
   702: 'Niederdrucksperre RESET automatisch. nur bei L/W-Geräten möglich: Niederdruck im Kältekreis hat angesprochen. Nach einiger Zeit automatischer WP-Neuanlauf. WP auf Leckage, Schaltpunkt Pressostat, Abtauung und TA-min überprüfen.',
@@ -77,8 +81,13 @@ export const errorCodes = {
 
 export type hErrorCodeType = keyof typeof errorCodes;
 
-export function getErrorCode(data: ReadonlyArray<number>): number {
-  return data[aFieldsErrorCodeDescription[0]];
+export function getErrorCode(
+  data: ReadonlyArray<number>,
+  index: number,
+): number {
+  if (index < 0 || index >= aFieldsErrorCodeDescription.length) return -1;
+
+  return data[aFieldsErrorCodeDescription[index]];
 }
 
 export function getErrorDescription(errorCode: number): string {
@@ -88,6 +97,23 @@ export function getErrorDescription(errorCode: number): string {
   return 'UNKOWN ERROR';
 }
 
-export function getErrorDesc(data: ReadonlyArray<number>): string {
-  return getErrorDescription(getErrorCode(data));
+export function getErrorDesc(
+  data: ReadonlyArray<number>,
+  index: number,
+): string {
+  return getErrorDescription(getErrorCode(data, index));
+}
+
+export class Error {
+  index: number;
+  code: number;
+  description: string;
+  timestamp: Date;
+
+  constructor(index: number, data: ReadonlyArray<number>) {
+    this.index = index;
+    this.code = getErrorCode(data, index);
+    this.description = getErrorDescription(this.code);
+    this.timestamp = parseDate(data[aFieldsErrorDate[index]]);
+  }
 }

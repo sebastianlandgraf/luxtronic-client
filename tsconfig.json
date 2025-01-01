@@ -1,18 +1,16 @@
 {
   "compilerOptions": {
     "outDir": "dist",
-    "module": "ESNext",
-    "target": "ESNext",
+    "module": "NodeNext",
+    "target": "es2023",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "isolatedModules": true,
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "baseUrl": "./",
-    "lib": [
-      "ESNext"
-    ],
     "paths": {
       "*": [
         "node_modules/*"
